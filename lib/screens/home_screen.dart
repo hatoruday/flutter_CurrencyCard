@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -8,6 +10,60 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  static const twentyFiveMinutes = 1500;
+  int totalSeconds = twentyFiveMinutes;
+  bool isRunning = false;
+  int totalPomodoros = 0;
+
+  late Timer timer;
+
+  void onRestartPressed() {
+    timer.cancel();
+    setState(() {
+      totalSeconds = 1500;
+      isRunning = false;
+    });
+  }
+
+  void onTick(Timer timer) {
+    if (totalSeconds == 0) {
+      setState(() {
+        totalPomodoros = totalPomodoros + 1;
+        isRunning = false;
+        totalSeconds = 1500;
+      });
+      timer.cancel();
+    } else {
+      setState(() {
+        totalSeconds = totalSeconds - 1;
+      });
+    }
+  }
+
+  void onStartPressed() {
+    timer = Timer.periodic(
+        const Duration(
+          seconds: 1,
+        ),
+        onTick);
+    setState(() {
+      isRunning = true;
+    });
+  }
+
+  void onPausePressed() {
+    timer.cancel();
+    setState(() {
+      isRunning = false;
+    });
+  }
+
+  String format(int seconds) {
+    var duration =
+        Duration(seconds: seconds).toString().split(".")[0].substring(2, 7);
+    return duration;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -19,7 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Container(
                 alignment: Alignment.bottomCenter,
                 child: Text(
-                  "25:00",
+                  format(totalSeconds),
                   style: TextStyle(
                     color: Theme.of(context).cardColor,
                     fontSize: 89,
@@ -31,11 +87,23 @@ class _HomeScreenState extends State<HomeScreen> {
             Flexible(
               flex: 3,
               child: Center(
-                child: IconButton(
-                  iconSize: 120,
-                  color: Theme.of(context).cardColor,
-                  icon: const Icon(Icons.play_circle_outline),
-                  onPressed: () {},
+                child: Column(
+                  children: [
+                    IconButton(
+                      iconSize: 120,
+                      color: Theme.of(context).cardColor,
+                      icon: Icon(isRunning
+                          ? Icons.pause_circle_outline
+                          : Icons.play_circle_outline),
+                      onPressed: isRunning ? onPausePressed : onStartPressed,
+                    ),
+                    IconButton(
+                      iconSize: 120,
+                      color: Theme.of(context).cardColor,
+                      icon: const Icon(Icons.restart_alt_outlined),
+                      onPressed: onRestartPressed,
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -47,12 +115,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Container(
                       decoration: BoxDecoration(
                         color: Theme.of(context).cardColor,
+                        borderRadius: BorderRadius.circular(50),
                       ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            "Pomodoro",
+                            "Pomodoros",
                             style: TextStyle(
                               fontSize: 20,
                               color: Theme.of(context)
@@ -63,7 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                           Text(
-                            "0",
+                            "$totalPomodoros",
                             style: TextStyle(
                               fontSize: 58,
                               color: Theme.of(context)
